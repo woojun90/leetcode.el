@@ -1,4 +1,8 @@
 [![MELPA](https://melpa.org/packages/leetcode-badge.svg)](https://melpa.org/#/leetcode)
+> forked from kaiwk/leetcode.el. modified to support leetcode-cn. please cooperate with
+Blacker1230/my_cookies to support leetcode-cn cookies. download Blacker1230/leetcode.el
+and Blacker1230/my_cookies, and overwrite the original.
+
 # Introduction
 
 LeetCode brings you offer, and now Emacs brings you LeetCode!
