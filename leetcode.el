@@ -4,6 +4,8 @@
 
 ;; Author: Wang Kai <kaiwkx@gmail.com>
 ;; Keywords: extensions, tools
+;; Package-Version: 20220206.1515
+;; Package-Commit: b3103bd08c8943091f702c66d674f0f27ef7fe0b
 ;; URL: https://github.com/kaiwk/leetcode.el
 ;; Package-Requires: ((emacs "26") (dash "2.16.0") (graphql "0.1.1") (spinner "1.7.3") (aio "1.0") (log4e "0.3.3"))
 ;; Version: 0.1.24
@@ -163,8 +165,8 @@ The elements of :problems has attributes:
 
 ;;; Login
 ;; URL
-(defconst leetcode--domain    "leetcode.com")
-(defconst leetcode--base-url  "https://leetcode.com")
+(defconst leetcode--domain    "leetcode-cn.com")
+(defconst leetcode--base-url  "https://leetcode-cn.com")
 (defconst leetcode--url-login (concat leetcode--base-url "/accounts/login"))
 
 ;; Header
@@ -266,7 +268,7 @@ It also cleans LeetCode cookies in `url-cookie-file'."
   (ignore-errors (url-cookie-delete-cookies leetcode--domain))
   (aio-await (leetcode--csrf-token))    ;knock knock, whisper me the mysterious information
   (let* ((my-cookies (executable-find "my_cookies"))
-         (my-cookies-output (shell-command-to-string my-cookies))
+         (my-cookies-output (shell-command-to-string (concat (shell-quote-argument my-cookies) " cn")))
          (cookies-list (seq-filter
                         (lambda (s) (not (string-empty-p s)))
                         (split-string my-cookies-output "\n")))
@@ -275,8 +277,8 @@ It also cleans LeetCode cookies in `url-cookie-file'."
                          cookies-list))
          (leetcode-session (cadr (assoc "LEETCODE_SESSION" cookies-pairs)))
          (leetcode-csrftoken (cadr (assoc "csrftoken" cookies-pairs))))
-    (leetcode--debug "login session: %s" leetcode-session)
-    (leetcode--debug "login csrftoken: %s" leetcode-csrftoken)
+    (leetcode--debug "login session: '%s'" leetcode-session)
+    (leetcode--debug "login csrftoken: '%s'" leetcode-csrftoken)
     (url-cookie-store "LEETCODE_SESSION" leetcode-session nil leetcode--domain "/" t)
     (url-cookie-store "csrftoken" leetcode-csrftoken nil leetcode--domain "/" t))
   (leetcode--loading-mode -1))
@@ -320,7 +322,7 @@ USER-AND-PROBLEMS is an alist comes from
                                   .stat.frontend_question_id .stat.question_id .stat.question__title)
                  (push (list
                         :status .status
-                        :id .stat.frontend_question_id
+                        :id .stat.question_id
                         :backend-id .stat.question_id
                         :title .stat.question__title
                         :acceptance (format
@@ -335,7 +337,7 @@ USER-AND-PROBLEMS is an alist comes from
 
 (defun leetcode--set-tags (all-tags)
   "Set `leetcode--all-tags' and `leetcode--all-problems' with ALL-TAGS."
-  (let ((tags-table (make-hash-table :size 2000)))
+  (let ((tags-table (make-hash-table :size 3200)))
     (let-alist all-tags
       (dolist (topic (to-list .topics))
         (let-alist topic
@@ -731,6 +733,29 @@ LeetCode require slug-title as the request parameters."
             (with-current-buffer res-buf
               (erase-buffer)
               (insert (concat "Your input:\n" .test_case "\n\n")))
+            ;; poll expected
+            (leetcode--debug "interpret_expected_id: %s" .interpret_expected_id)
+            (let ((expect_res (aio-await (leetcode--check-submission .interpret_expected_id slug-title)))
+                  (retry-times 0))
+              (while (and (not expect_res) (< retry-times leetcode-retry-threshold))
+                (aio-await (aio-sleep 0.5))
+                (setq expect_res (aio-await (leetcode--check-submission .interpret_expected_id slug-title)))
+                (setq retry-times (1+ retry-times)))
+              (if (< retry-times leetcode-retry-threshold)
+                  (let-alist expect_res
+                    (with-current-buffer res-buf
+                      (goto-char (point-max))
+                      (cond
+                       ((eq .status_code 10)
+                        (insert "Expected:\n")
+                        (dotimes (i (length .code_answer))
+                          (insert (aref .code_answer i))
+                          (insert "\n"))
+                        (insert "\n"))
+                       ((not (eq .status_code 10))
+                        (insert "Expected:\nGot None\n"))
+                       )))))
+
             ;; poll interpreted
             (let ((actual_res (aio-await (leetcode--check-submission .interpret_id slug-title)))
                   (retry-times 0))
@@ -1104,6 +1129,11 @@ Call `leetcode-solve-problem' on the current problem id."
 (defcustom leetcode-prefer-tag-display t
   "Whether to display tags by default in the *leetcode* buffer."
   :type :boolean)
+
+;;(defcustom leetcode-use-cn-source nil
+;;  "Whether to use leetcode-cn.com source."
+;;  :type 'boolean
+;;  :group 'leetcode)
 
 (defvar leetcode--display-tags leetcode-prefer-tag-display
   "(Internal) Whether tags are displayed the *leetcode* buffer.")
