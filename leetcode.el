@@ -165,8 +165,8 @@ The elements of :problems has attributes:
 
 ;;; Login
 ;; URL
-(defconst leetcode--domain    "leetcode-cn.com")
-(defconst leetcode--base-url  "https://leetcode-cn.com")
+(defconst leetcode--domain    "leetcode.cn")
+(defconst leetcode--base-url  "https://leetcode.cn")
 (defconst leetcode--url-login (concat leetcode--base-url "/accounts/login"))
 
 ;; Header
