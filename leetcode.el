@@ -176,7 +176,6 @@ The elements of :problems has attributes:
                                        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.12; rv:66.0) Gecko/20100101 Firefox/66.0"))
 (defconst leetcode--X-Requested-With '("X-Requested-With" . "XMLHttpRequest"))
 (defconst leetcode--X-CSRFToken      "X-CSRFToken")
-(defconst leetcode--Accept-Language      '("Accept-Language" . "zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6,zh-TW;q=0.5,ja;q=0.4"))
 
 ;; API
 (defconst leetcode--api-root                (concat leetcode--base-url "/api"))
@@ -397,7 +396,6 @@ Return a object with following attributes:
          (url-request-method "POST")
          (url-request-extra-headers
           `(,leetcode--User-Agent
-            ,leetcode--Accept-Language
             ,(cons "Content-Type" "application/json")))
          (url-request-data
           (json-encode (leetcode--problem-graphql-params
@@ -584,7 +582,6 @@ Return a list of rows, each row is a vector:
   (let* ((url-request-method "GET")
          (url-request-extra-headers
           `(,leetcode--User-Agent
-            ,leetcode--Accept-Language
             ,leetcode--X-Requested-With
             ,(leetcode--referer leetcode--url-login)))
          (result (aio-await (aio-url-retrieve leetcode--api-all-tags))))
@@ -600,7 +597,6 @@ Return a list of rows, each row is a vector:
     (let ((url-request-method "GET")
           (url-request-extra-headers
            `(,leetcode--User-Agent
-             ,leetcode--Accept-Language
              ,leetcode--X-Requested-With
              ,(leetcode--referer leetcode--url-login)))
           (result (aio-await (aio-url-retrieve leetcode--api-all-problems))))
@@ -672,7 +668,6 @@ see: https://github.com/skeeto/emacs-aio/issues/3."
   (let* ((url-request-method "POST")
          (url-request-extra-headers
           `(,leetcode--User-Agent
-            ,leetcode--Accept-Language
             ("Content-Type" . "application/json")
             ,(leetcode--referer leetcode--url-login)
             ,(cons leetcode--X-CSRFToken (leetcode--maybe-csrf-token))))
