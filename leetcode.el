@@ -1,3 +1,5 @@
+
+
 ;;; leetcode.el --- An leetcode client           -*- lexical-binding: t; no-byte-compile: t -*-
 
 ;; Copyright (C) 2019  Wang Kai
@@ -376,6 +378,8 @@ OPERATION and VARS are LeetCode GraphQL parameters."
             likes
             dislikes
             content
+            translatedContent
+            translatedTitle
             sampleTestCase
             (topicTags slug)
             (codeSnippets langSlug code)))))
@@ -670,7 +674,7 @@ see: https://github.com/skeeto/emacs-aio/issues/3."
           `(,leetcode--User-Agent
             ,leetcode--Accept-Language
             ("Content-Type" . "application/json")
-            ,(leetcode--referer leetcode--url-login) 
+            ,(leetcode--referer leetcode--url-login)
             ,(cons leetcode--X-CSRFToken (leetcode--maybe-csrf-token))))
          (url-request-data
           (json-encode
@@ -991,11 +995,11 @@ will show the description in other window and jump to it."
       (when (get-buffer buf-name)
         (kill-buffer buf-name))
       (with-temp-buffer
-        (insert (concat "<h1>" (number-to-string problem-id) ". " title "</h1>"))
+        (insert (concat "<h1>" (number-to-string problem-id) ". " .translatedTitle "</h1>"))
         (insert (concat (capitalize difficulty) html-margin
                         "likes: " (number-to-string .likes) html-margin
                         "dislikes: " (number-to-string .dislikes)))
-        (insert .content)
+        (insert .translatedContent)
         (setq shr-current-font t)
         (leetcode--replace-in-buffer "" "")
         ;; NOTE: shr.el can't render "https://xxxx.png", so we use "http"
@@ -1301,7 +1305,7 @@ major mode by `leetcode-prefer-language'and `auto-mode-alist'."
       (define-key map "l" #'leetcode-set-prefer-language)
       (define-key map "t" #'leetcode-set-filter-tag)
       (define-key map "T" #'leetcode-toggle-tag-display)
-      (define-key map "P" #'leetcode-toggle-paid-display)      
+      (define-key map "P" #'leetcode-toggle-paid-display)
       (define-key map "d" #'leetcode-set-filter-difficulty)
       (define-key map "g" #'leetcode-refresh)
       (define-key map "G" #'leetcode-refresh-fetch)
