@@ -1,5 +1,3 @@
-
-
 ;;; leetcode.el --- An leetcode client           -*- lexical-binding: t; no-byte-compile: t -*-
 
 ;; Copyright (C) 2019  Wang Kai
